@@ -1,0 +1,31 @@
+version: '3.1'
+
+services:
+  app:
+    container_name: node-app
+    build: ./
+    restart: always
+    ports:
+      - 3000:3000
+    volumes:
+      - .:/usr/src/app
+      - node-modules:/usr/src/app/node_modules
+    environment:
+      - DATABASE_HOST='mongodb://mongo/'
+      - COLLECTION_NAME='mocks'
+    links:
+      - mongo
+    command: npm run start:dev
+
+  mongo:
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes: 
+      - mongodb:/data/db
+      - mongo-config:/data/configdb
+
+volumes: 
+  mongodb:
+  mongo-config:
+  node-modules:
