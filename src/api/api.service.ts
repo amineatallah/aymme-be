@@ -5,7 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Mock } from '../interfaces/mock.interface';
 import * as _ from 'lodash';
 import { PortalModel } from '../interfaces/portalModel.interface';
-import { loopOver } from '../helpers/helpers';
+import { cleanModel } from '../helpers/helpers';
 
 @Injectable()
 export class ApiService {
@@ -156,7 +156,7 @@ export class ApiService {
       name: jsonData.name,
       host: portalUrl,
       loginUrl: loginUrl,
-      pages: loopOver(jsonData.pages)
+      pages: cleanModel(jsonData.pages)
     }, {upsert: true, new: true})
     return {
       name: model.name,
