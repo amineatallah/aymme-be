@@ -74,7 +74,6 @@ export class ApiController {
   // portal models
   @Get('/getportals')
   async getPortals() {
-    console.log('here');
     return this.apiService.getPortals();
   }
 
