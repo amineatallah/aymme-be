@@ -157,7 +157,7 @@ export class ApiService {
       host: portalUrl,
       loginUrl: loginUrl,
       pages: cleanModel(jsonData.pages)
-    }, {upsert: true, new: true})
+    }, {upsert: true, new: true});
     return {
       name: model.name,
       host: model.host,
@@ -168,7 +168,7 @@ export class ApiService {
   }
 
   async updatePortalModel(portalName, data) {
-    let model = await this.portalModel.findOneAndUpdate({ name: portalName }, data);
+    let model = await this.portalModel.findOneAndUpdate({ name: portalName }, data, {new: true});
     return model;
   }
 
