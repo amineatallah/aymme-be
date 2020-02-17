@@ -78,9 +78,9 @@ export class ApiController {
     return this.apiService.getPortals();
   }
 
-  @Delete('/portal/:id')
-  async deletePortal(@Param('id') id) {
-    return this.apiService.deletePortal(id);
+  @Delete('/portal/:name')
+  async deletePortal(@Param('name') name) {
+    return this.apiService.deletePortal(name);
   }
 
   // @Get('/getmodel/:portalName')

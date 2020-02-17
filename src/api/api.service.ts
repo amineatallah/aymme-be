@@ -121,8 +121,8 @@ export class ApiService {
     return portals;
   }
 
-  async deletePortal(id) {
-    let deleted = await this.portalModel.deleteOne({ _id: id });
+  async deletePortal(name) {
+    let deleted = await this.portalModel.deleteOne({ name: name });
     return deleted;
   }
 
