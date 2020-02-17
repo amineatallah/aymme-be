@@ -28,7 +28,7 @@ export class ApiController {
   //   return this.apiService.getEndpoints();
   // }
 
-// services
+  // services
   @Get('/services/:service')
   async getService(@Param('service') service) {
     return this.apiService.getServiceEndpoints(service);
@@ -45,12 +45,12 @@ export class ApiController {
   }
 
   @Post('/createspec')
-  async createSpec(@Body('name') name){
+  async createSpec(@Body('name') name) {
     return this.apiService.createSpec(name);
   }
 
-  @Get('/specs')  
-  async getSpecs(){
+  @Get('/specs')
+  async getSpecs() {
     return this.apiService.getSpecs();
   }
 
@@ -61,23 +61,28 @@ export class ApiController {
 
   @Post('/upload/:id')
   @UseInterceptors(FilesInterceptor('files[]'))
-  async uploadFile(@UploadedFiles() files, @Param('id') id){
+  async uploadFile(@UploadedFiles() files, @Param('id') id) {
     return this.apiService.uploadFile(id, files);
   }
 
   @Get('/findmocks/:id')
-  async findMocks(@Param('id') id ){
+  async findMocks(@Param('id') id) {
     return this.apiService.findMocks(id);
   }
 
 
   // portal models
   @Get('/getportals')
-  async getPortals(){
+  async getPortals() {
     console.log('here');
     return this.apiService.getPortals();
   }
-  
+
+  @Delete('/portal/:id')
+  async deletePortal(@Param('id') id) {
+    return this.apiService.deletePortal(id);
+  }
+
   // @Get('/getmodel/:portalName')
   // async getModel(@Param('portalName') portalName){
   //   console.log('portal', portalName)
@@ -85,12 +90,12 @@ export class ApiController {
   // }
 
   @Get('simplemodel/:portalName')
-  async getSimpleModel(@Param('portalName') portalName){
+  async getSimpleModel(@Param('portalName') portalName) {
     return this.apiService.getSimpleModel(portalName);
   }
-  
+
   @Post('/syncmodel')
-  async syncPortalModel(@Body('portalName') portalName, @Body('portalUrl') portalUrl, @Body('loginUrl') loginUrl){
+  async syncPortalModel(@Body('portalName') portalName, @Body('portalUrl') portalUrl, @Body('loginUrl') loginUrl) {
     return this.apiService.syncPortalModel(portalName, portalUrl, loginUrl);
   }
 
