@@ -19,7 +19,7 @@ export class ApiService {
   async getServices() {
     const services = await this.endPointModel.aggregate([
       { $group: { _id: "$serviceName", serviceName: { $first: '$serviceName' }, endpoints: { $push: { path: '$path', id: "$_id", statusCode: "$statusCode" } } } },
-      { $sort : { serviceName: 1}}
+      { $sort: { serviceName: 1 } }
     ]);
     return services;
   }
@@ -40,7 +40,7 @@ export class ApiService {
   }
 
   async deleteEndpointById(id: string) {
-    let deleted = await this.endPointModel.deleteOne({ _id: id});
+    let deleted = await this.endPointModel.deleteOne({ _id: id });
     return deleted;
   }
 
@@ -63,7 +63,7 @@ export class ApiService {
   }
 
   async deleteServices(name) {
-    let deleted = await this.endPointModel.deleteMany({serviceName: name})
+    let deleted = await this.endPointModel.deleteMany({ serviceName: name })
     return deleted;
   }
 
@@ -77,7 +77,7 @@ export class ApiService {
   }
 
   async getSpecs() {
-    const specs = await this.mockModel.find().sort({name: 1});
+    const specs = await this.mockModel.find().sort({ name: 1 });
     return specs;
   }
 
@@ -87,7 +87,7 @@ export class ApiService {
   }
 
   async deleteSpecs(id) {
-    let deleted = await this.mockModel.deleteOne({_id: id});
+    let deleted = await this.mockModel.deleteOne({ _id: id });
     return deleted;
   }
 
@@ -121,6 +121,11 @@ export class ApiService {
     return portals;
   }
 
+  async deletePortal(id) {
+    let deleted = await this.mockModel.deleteOne({ _id: id });
+    return deleted;
+  }
+
   // async getModel(portalName) {
   //   let portalModel = await this.portalModel.findOne({ name: portalName });
   //   return {
@@ -132,7 +137,7 @@ export class ApiService {
   //   };
   // }
 
-  async getSimpleModel(portalName){
+  async getSimpleModel(portalName) {
     let portalModel = await this.portalModel.findOne({ name: portalName });
     let pages = JSON.parse(portalModel.pages);
     let page = pages.find(page => page.name === portalModel.activePage);
@@ -149,17 +154,17 @@ export class ApiService {
       host: portalUrl,
       loginUrl: loginUrl,
       pages: JSON.stringify(jsonData.pages)
-    }, {upsert: true})
+    }, { upsert: true })
     return {
       name: model.name,
       host: model.host,
-      loginUrl:  loginUrl,
+      loginUrl: loginUrl,
       pages: JSON.parse(model.pages)
     }
   }
 
   async updatePortalModel(portalName, data) {
-    let model = await this.portalModel.findOneAndUpdate({name: portalName}, data);
+    let model = await this.portalModel.findOneAndUpdate({ name: portalName }, data);
     return model;
   }
 
