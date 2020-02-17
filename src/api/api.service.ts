@@ -122,7 +122,7 @@ export class ApiService {
   }
 
   async deletePortal(id) {
-    let deleted = await this.mockModel.deleteOne({ _id: id });
+    let deleted = await this.portalModel.deleteOne({ _id: id });
     return deleted;
   }
 
