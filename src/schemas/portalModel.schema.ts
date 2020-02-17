@@ -6,7 +6,7 @@ export const PortalModelSchema = new mongoose.Schema({
   host: String,
   activePage: String,
   loginUrl: String,
-  pages: String
+  pages: mongoose.Schema.Types.Mixed
 });
 
 

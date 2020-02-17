@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Mock } from '../interfaces/mock.interface';
 import * as _ from 'lodash';
 import { PortalModel } from '../interfaces/portalModel.interface';
+import { loopOver } from '../helpers/helpers';
 
 @Injectable()
 export class ApiService {
@@ -115,7 +116,7 @@ export class ApiService {
         host: portal.host,
         loginUrl: portal.loginUrl,
         activePage: portal.activePage,
-        pages: JSON.parse(portal.pages)
+        pages: portal.pages
       }
     })
     return portals;
@@ -148,18 +149,41 @@ export class ApiService {
     const login = await this.httpService.post(loginUrl, { username: 'admin', password: 'admin' }).toPromise();
     const result = await this.httpService.get(portalUrl + '/' + portalName + '.json', { headers: { Cookie: "Authorization=" + login.data.access_token } }).toPromise();
     let data = JSON.stringify(result.data).replace(/preferences/g, 'properties');
+    
     let jsonData = JSON.parse(data);
+
+
+
+    // const keysToRemove = ['src', 'area', 'order', 'child.0.title', 'child.1.title', 'child.2.title','id', 'render.requires','child.columnClass', 'render.strategy', 'label', 'child.amountToCreate', 'child.extendedItemName', 'options'];
+    // function loopOver(jsonData) {
+    //   for (var prop in jsonData) {
+    //     if (Object.prototype.hasOwnProperty.call(jsonData, prop)) {
+
+    //       keysToRemove.forEach(key => {
+    //         if (jsonData[prop][key]) delete jsonData[prop][key];
+    //         if (jsonData[prop]['properties'][key]) delete jsonData[prop]['properties'][key];
+    //       })
+
+    //       loopOver(jsonData[prop]['children']);
+
+    //     }
+    //   }
+    //   return jsonData;
+    // }
+ 
+    
     let model = await this.portalModel.findOneAndUpdate({ name: portalName }, {
       name: jsonData.name,
       host: portalUrl,
       loginUrl: loginUrl,
-      pages: JSON.stringify(jsonData.pages)
-    }, { upsert: true })
+      pages: loopOver(jsonData.pages)
+    }, {upsert: true, new: true})
     return {
       name: model.name,
       host: model.host,
       loginUrl: loginUrl,
-      pages: JSON.parse(model.pages)
+      pages: model.pages,
+      activePage: model.activePage || model.pages[0].name
     }
   }
 

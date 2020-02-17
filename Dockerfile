@@ -3,8 +3,8 @@ FROM node:12 as base
 WORKDIR /usr/src/app
 
 COPY ./ ./
-RUN npm ci
-RUN npm run build
+# RUN npm ci
+# RUN npm run build
 
 FROM node:alpine as production
 
