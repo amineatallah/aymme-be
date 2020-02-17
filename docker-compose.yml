@@ -1,9 +1,11 @@
-version: '3.1'
+version: '3.7'
 
 services:
   app:
-    container_name: node-app
-    build: ./
+    container_name: aymme-be
+    build:
+      context: .
+      target: base
     restart: always
     ports:
       - 3000:3000
