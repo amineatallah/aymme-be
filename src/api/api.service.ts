@@ -140,7 +140,7 @@ export class ApiService {
 
   async getSimpleModel(portalName) {
     let portalModel = await this.portalModel.findOne({ name: portalName });
-    let pages = JSON.parse(portalModel.pages);
+    let pages = portalModel.pages;
     let page = pages.find(page => page.name === portalModel.activePage);
     return page;
   }
