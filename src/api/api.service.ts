@@ -163,7 +163,7 @@ export class ApiService {
       host: model.host,
       loginUrl: loginUrl,
       pages: model.pages,
-      activePage: model.activePage || model.pages[0].name
+      activePage: model.activePage
     }
   }
 
