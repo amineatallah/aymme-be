@@ -151,12 +151,26 @@ export class ApiService {
     let data = JSON.stringify(result.data).replace(/preferences/g, 'properties');
     
     let jsonData = JSON.parse(data);
+
+    let newActivePage = null;
+
+    if (jsonData.pages.length > 0 ) {
+      let indexPage = jsonData.pages.find((page) => page.name === 'index');
+
+      if (indexPage) {
+        newActivePage = indexPage.name;
+      }
+      else {
+        newActivePage = jsonData.pages[0].name;
+      }
+    }
     
     let model = await this.portalModel.findOneAndUpdate({ name: portalName }, {
       name: jsonData.name,
       host: portalUrl,
       loginUrl: loginUrl,
-      pages: cleanModel(jsonData.pages)
+      pages: cleanModel(jsonData.pages),
+      activePage: newActivePage
     }, {upsert: true, new: true});
     return {
       name: model.name,
