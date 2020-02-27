@@ -25,6 +25,11 @@ export class ApiService {
     return services;
   }
 
+  async exportServices() {
+    const services = await this.endPointModel.find();
+    return services;
+  }
+
   async getServiceEndpoints(serviceName) {
     const endpoints = await this.endPointModel.find({ 'serviceName': serviceName });
     return endpoints;
@@ -149,12 +154,12 @@ export class ApiService {
     const login = await this.httpService.post(loginUrl, { username: 'admin', password: 'admin' }).toPromise();
     const result = await this.httpService.get(portalUrl + '/' + portalName + '.json', { headers: { Cookie: "Authorization=" + login.data.access_token } }).toPromise();
     let data = JSON.stringify(result.data).replace(/preferences/g, 'properties');
-    
+
     let jsonData = JSON.parse(data);
 
     let newActivePage = null;
 
-    if (jsonData.pages.length > 0 ) {
+    if (jsonData.pages.length > 0) {
       let indexPage = jsonData.pages.find((page) => page.name === 'index');
 
       if (indexPage) {
@@ -164,14 +169,14 @@ export class ApiService {
         newActivePage = jsonData.pages[0].name;
       }
     }
-    
+
     let model = await this.portalModel.findOneAndUpdate({ name: portalName }, {
       name: jsonData.name,
       host: portalUrl,
       loginUrl: loginUrl,
       pages: cleanModel(jsonData.pages),
       activePage: newActivePage
-    }, {upsert: true, new: true});
+    }, { upsert: true, new: true });
     return {
       name: model.name,
       host: model.host,
@@ -182,8 +187,31 @@ export class ApiService {
   }
 
   async updatePortalModel(portalName, data) {
-    let model = await this.portalModel.findOneAndUpdate({ name: portalName }, data, {new: true});
+    let model = await this.portalModel.findOneAndUpdate({ name: portalName }, data, { new: true });
     return model;
   }
 
+  async importServices(files) {
+    let parsedFile = files.map(file => {
+      return {
+        name: file.originalname,
+        data: JSON.parse(file.buffer)
+      }
+    })[0];
+
+    await this.endPointModel.bulkWrite(parsedFile.data.map((obj) => {
+      const { path, ...update } = obj;
+      return {
+        updateOne: {
+          filter: { path: path },
+          update: {
+            $set: update,
+          },
+          upsert: true,
+        },
+      };
+    }));
+
+    return this.getServices();
+  }
 }

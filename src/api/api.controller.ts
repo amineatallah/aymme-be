@@ -102,4 +102,15 @@ export class ApiController {
   async updatePortalModel(@Param('portalName') portalName, @Body() body) {
     return this.apiService.updatePortalModel(portalName, body);
   }
+
+  @Get('/exportservices')  
+  async exportServices() {
+    return this.apiService.exportServices();
+  }
+
+  @Post('/importServices')
+  @UseInterceptors(FilesInterceptor('files[]'))
+  async importServices(@UploadedFiles() files) {
+    return this.apiService.importServices(files);
+  }
 }
