@@ -11,10 +11,10 @@ services:
       - 3000:3000
     volumes:
       - .:/usr/src/app
-      - node-modules:/usr/src/app/node_modules
+      - /usr/src/app/node_modules
     environment:
-      - DATABASE_HOST='mongodb://mongo/'
-      - COLLECTION_NAME=mocks
+      - DATABASE_HOST=mongodb://mongo/
+      - DB_NAME=aymme
     links:
       - mongo
     command: npm run start:dev
