@@ -6,77 +6,136 @@ import { Mock } from '../interfaces/mock.interface';
 import * as _ from 'lodash';
 import { PortalModel } from '../interfaces/portalModel.interface';
 import { cleanModel } from '../helpers/helpers';
+import { Project } from '../interfaces/project.interface';
 
 @Injectable()
 export class ApiService {
   constructor(
     @InjectModel('Endpoint') private readonly endPointModel: Model<Endpoint>,
     @InjectModel('Mock') private readonly mockModel: Model<Mock>,
+    @InjectModel('Project') private readonly projectModel: Model<Project>,
     @InjectModel('PortalModel') private readonly portalModel: Model<PortalModel>,
     private readonly httpService: HttpService
   ) {
 
   }
-  async getServices() {
-    const services = await this.endPointModel.aggregate([
-      { $group: { _id: "$serviceName", serviceName: { $first: '$serviceName' }, endpoints: { $push: { path: '$path', id: "$_id", statusCode: "$statusCode" } } } },
-      { $sort: { serviceName: 1 } }
+
+  async createProject(projectName) {
+    let project = await this.projectModel.findOneAndUpdate({ name: projectName.toLowerCase() },{ name: projectName.toLowerCase() }, {upsert: true, new: true});
+    return project;
+  }
+  
+  async deleteProject(projectName: string) {
+    let deleted = await this.projectModel.deleteOne({name: projectName});
+    return deleted;
+  }
+
+  async getProjects() {
+    const projects = await this.projectModel.find();
+    return projects;
+  }
+
+  async getServices(projectName: string){
+    const project = await this.projectModel.aggregate([{
+        $match: {
+          name: projectName
+        }
+      }, {
+        $project: {
+          endpoints: 1
+        }
+      }, {
+        $unwind: "$endpoints"
+      },
+      {
+        $group: {
+          _id: "$endpoints.serviceName",
+          serviceName: {
+            $first: '$endpoints.serviceName'
+          },
+          endpoints: {
+            $push: {
+              path: '$endpoints.path',
+              id: "$endpoints.id",
+              statusCode: "$endpoints.statusCode"
+            }
+          }
+        }
+      },
+      {
+        $sort: {
+          "serviceName": 1
+        }
+      }
     ]);
-    return services;
+    return project;
   }
 
-  async exportServices() {
-    const services = await this.endPointModel.find();
-    return services;
+  // async exportServices() {
+  //   const services = await this.endPointModel.find();
+  //   return services;
+  // }
+
+  // async getServiceEndpoints(serviceName) {
+  //   const endpoints = await this.endPointModel.find({ 'serviceName': serviceName });
+  //   return endpoints;
+  // }
+
+  // async getEndpoints() {
+  //   console.log('getEndpoints');
+  //   const endpoints = await this.endPointModel.find();
+  //   return endpoints;
+  // }
+
+  async getEndpoint(projectName, id) {
+    let project = await this.projectModel.find({name: projectName }, { endpoints: { $elemMatch: {id: id }}});
+    return project[0].endpoints[0];
   }
 
-  async getServiceEndpoints(serviceName) {
-    const endpoints = await this.endPointModel.find({ 'serviceName': serviceName });
-    return endpoints;
-  }
+  async deleteEndpointById(projectName: string, id: string) {
+    let deleted = await this.projectModel.updateOne({
+      name: projectName
+    }, { $pull: {
+      endpoints: { id: id }
+    }})
 
-  async getEndpoints() {
-    const endpoints = await this.endPointModel.find();
-    return endpoints;
-  }
-
-  async getEndpoint(id) {
-    let endpoint = await this.endPointModel.findById(id);
-    return endpoint;
-  }
-
-  async deleteEndpointById(id: string) {
-    let deleted = await this.endPointModel.deleteOne({ _id: id });
     return deleted;
   }
 
-  async updateEndpoint(id, data) {
+  async updateEndpoint(projectName, id, data) {
+ 
+    let endpoint = await this.projectModel.updateOne({
+      name: projectName,
+      endpoints: {$elemMatch: {id: id}}
+    },{
+      $set: {
+        "endpoints.$.statusCode": data.statusCode,
+        "endpoints.$.delay": data.delay,
+        "endpoints.$.response": data.response,
+        "endpoints.$.emptyArray": data.emptyArray,
+        "endpoints.$.forward" : data.forward,
+        "endpoints.$.customHeaders": data.customHeaders
+      }
+    })
 
-    let statusCode = data.statusCode;
-    let endPoint = await this.getEndpoint(id);
-    endPoint.statusCode = statusCode;
-    endPoint.response[statusCode].data.body = data.response;
-    endPoint.delay = data.delay;
-    endPoint.emptyArray = data.emptyArray;
-    endPoint.forward = data.forward;
-    endPoint.customHeaders = data.customHeaders;
-    endPoint.markModified('customHeaders');
-    endPoint.markModified('response');
-    endPoint = await endPoint.save();
-
-    return endPoint;
+    return endpoint;
 
   }
 
-  async deleteServices(name) {
-    let deleted = await this.endPointModel.deleteMany({ serviceName: name })
+  async deleteServices(projectName: string, serviceName: string) {
+    let deleted = await this.projectModel.updateOne({
+      name: projectName
+    }, { $pull: {
+      endpoints: { serviceName: serviceName }
+    }})
+
     return deleted;
   }
 
-  async findMocks(id) {
-    let endpoint = await this.endPointModel.aggregate([{ $match: { 'response.200.data.body.id': id } }, { $unwind: { path: '$response.200.data.body' } }, { $match: { 'response.200.data.body.id': id } }, { $project: { 'response': '$response.200.data.body', _id: 0 } }])
-    return endpoint;
-  }
+  // async findMocks(id) {
+  //   let endpoint = await this.endPointModel.aggregate([{ $match: { 'response.200.data.body.id': id } }, { $unwind: { path: '$response.200.data.body' } }, { $match: { 'response.200.data.body.id': id } }, { $project: { 'response': '$response.200.data.body', _id: 0 } }])
+  //   return endpoint;
+  // }
 
   async createSpec(name) {
     return await this.mockModel.insertMany([{ name }]);
@@ -176,7 +235,8 @@ export class ApiService {
       loginUrl: loginUrl,
       pages: cleanModel(jsonData.pages),
       activePage: newActivePage
-    }, { upsert: true, new: true });
+    }, {upsert: true, new: true});
+  
     return {
       name: model.name,
       host: model.host,
@@ -191,27 +251,29 @@ export class ApiService {
     return model;
   }
 
-  async importServices(files) {
-    let parsedFile = files.map(file => {
-      return {
-        name: file.originalname,
-        data: JSON.parse(file.buffer)
-      }
-    })[0];
+  // async importServices(files) {
+  //   let parsedFile = files.map(file => {
+  //     return {
+  //       name: file.originalname,
+  //       data: JSON.parse(file.buffer)
+  //     }
+  //   })[0];
 
-    await this.endPointModel.bulkWrite(parsedFile.data.map((obj) => {
-      const { path, ...update } = obj;
-      return {
-        updateOne: {
-          filter: { path: path },
-          update: {
-            $set: update,
-          },
-          upsert: true,
-        },
-      };
-    }));
+  //   await this.endPointModel.bulkWrite(parsedFile.data.map((obj) => {
+  //     const { path, ...update } = obj;
+  //     return {
+  //       updateOne: {
+  //         filter: { path: path },
+  //         update: {
+  //           $set: update,
+  //         },
+  //         upsert: true,
+  //       },
+  //     };
+  //   }));
 
-    return this.getServices();
-  }
+  //   return this.getServices();
+  // }
+  
+
 }

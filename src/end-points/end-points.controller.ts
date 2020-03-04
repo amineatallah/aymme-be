@@ -17,16 +17,15 @@ export class EndPointsController {
   async interceptEndpoints(@Req() req, @Query() query, @Headers() headers, @Session() session, @Param() param, @Res() res) {
 
     const endpoint = await this.endPointsService.interceptEnpoints(req._parsedUrl.pathname, query);
-    console.log('endpoint', endpoint);
     // if(endpoint.forward){
     //   return this.endPointsService.forwardRequest();
     // } else {
 
     // console.log('endpoints.customHeaders', endpoint.customHeaders.values());
       return res
-              .set(endpoint.customHeaders || {})
+              .set(endpoint.customHeaders)
               .status(endpoint.statusCode)
-              .send(endpoint.response[endpoint.statusCode].data.body);
+              .send(endpoint.response[endpoint.statusCode]);
     // }
   }
 

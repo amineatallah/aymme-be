@@ -2,12 +2,18 @@ import { Injectable, Inject, HttpService } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Endpoint } from '../interfaces/endpoints.interfaces';
 import { InjectModel } from '@nestjs/mongoose';
+import { Project } from '../interfaces/project.interface';
+
 const sleep = require('sleep-promise');
+let uniqid = require('uniqid');
 
 @Injectable()
 export class EndPointsService {
 
-  constructor(@InjectModel('Endpoint') private readonly endPointModel: Model<Endpoint>, private readonly httpService: HttpService) {
+  constructor(
+    @InjectModel('Endpoint') private readonly endPointModel: Model<Endpoint>, 
+    @InjectModel('Project') private readonly projectModel: Model<Project>, 
+    private readonly httpService: HttpService) {
 
   }
 
@@ -19,60 +25,97 @@ export class EndPointsService {
 
   async interceptEnpoints(uri, query) {
 
+    const initialResponse = {
+      path: uri,
+      id: uniqid(),
+      serviceName: uri.split('/')[4],
+      statusCode: '500',
+      delay: 0,
+      emptyArray: false,
+      customHeaders: {},
+      response: {
+        200: [],
+        401: [],
+        404: [],
+        500: { message: "Please update mocks data" }
+      }
+    }
 
-    let endpoint;
-    let found = await this.endPointModel.findOne({ path: uri });
+    let found = await this.projectModel.findOne({name: uri.split('/')[2], 'endpoints.path': uri });
 
     if (found) {
-      if (found.response[200].data.body.length) {
-
-        endpoint = await this.endPointModel.aggregate(
-          [
-            { $match: { path: uri } },
-            { $unwind: { path: '$response.200.data.body' } },
-            { $limit: parseInt(query.size) || 20 },
-            { $group: { _id: '$_id', 'response': { $push: '$response.200.data.body' } } },
-          ]
-        );
-
-        found.response[200].data.body = endpoint[0].response;
-      }
-
-      if (found.emptyArray) {
-        found.response[200].data.body = [];
-      }
-
-      if (parseInt(found.delay, 10) > 0) await sleep(found.delay);
-      return found;
-
-    } else {
-      const endpoint = this.endPointModel({
-        path: uri,
-        serviceName: uri.split('/')[3],
-        response: {
-          200: {
-            data: {
-              body: []
+      let project = await this.projectModel.aggregate([{
+          $match: {
+            name: uri.split('/')[2],
+            'endpoints.path': uri
+          }
+        },
+        {
+          $project: {
+            endpoints: {
+              $filter: {
+                input: '$endpoints',
+                as: 'endpoint',
+                cond: {
+                  $eq: ["$$endpoint.path", uri]
+                }
+              }
             }
-          },
-          401: {
-            data: {
-              body: []
-            },
-          },
-          404: {
-            data: {
-              body: []
+          }
+        },
+        {
+          $project: {
+            endpoint: {
+              $arrayElemAt: ['$endpoints', 0]
             }
-          },
-          500: {
-            data: {
-              body: {message: "Please update mocks data"}
+          }
+        }, {
+          $project: {
+            endpoint: {
+              $cond: {
+                if: {
+                  $isArray: '$endpoint.response.200'
+                },
+                then: {
+                  response: {
+                    path: '$endpoint.path',
+                    serviceName: '$endpoint.serviceName',
+                    delay: '$endpoint.delay',
+                    statusCode: '$endpoint.statusCode',
+                    response: {
+                      $mergeObjects: ['$endpoint.response', {
+                        200: {
+                          $slice: ['$endpoint.response.200', 2]
+                        }
+                      }]
+                    }
+                  }
+                },
+                else: {
+                  response: '$endpoint'
+                }
+              }
             }
           }
         }
-      });
-      return await endpoint.save();
-    }
+      ]);
+
+      const data = project[0].endpoint.response;
+
+      if (data.emptyArray) {
+        data.response[200] = [];
+      }
+
+      if (parseInt(data.delay, 10) > 0) await sleep(data.delay);
+      return data
+
+    } else {
+      const endpoint = await this.projectModel.updateOne(
+        {name: uri.split('/')[2]},
+        {$addToSet:{
+          endpoints: initialResponse
+        }});
+      return initialResponse;
+    }   
   }
 }

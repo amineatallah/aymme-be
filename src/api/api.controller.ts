@@ -7,45 +7,48 @@ export class ApiController {
 
   constructor(private apiService: ApiService) { }
 
-  // endpoints
-  @Get('/endpoints/:id')
-  async getEndpoint(@Param('id') id: string) {
-    return this.apiService.getEndpoint(id);
+  @Post('projects')
+  async createProject(@Body() data: {projectName: string}) {
+    return this.apiService.createProject(data.projectName);
   }
 
-  @Post('/endpoints/:id')
-  async updateEndpoint(@Param('id') id, @Body() data) {
-    return this.apiService.updateEndpoint(id, data);
+  @Get('/projects')
+  async getProjects() {
+    return this.apiService.getProjects();
   }
 
-  @Delete('/endpoints/:id')
-  async deleteEnpointById(@Param('id') id) {
-    return this.apiService.deleteEndpointById(id);
+  @Delete('/projects/:projectName')
+  async deleteProject(@Param('projectName') projectName: string){
+    return this.apiService.deleteProject(projectName);
   }
 
-  // @Get('/endpoints')
-  // async getEndpoints() {
-  //   return this.apiService.getEndpoints();
-  // }
-
-  // services
-  @Get('/services/:service')
-  async getService(@Param('service') service) {
-    return this.apiService.getServiceEndpoints(service);
+  @Get('/projects/:projectName/services')
+  async getProject(@Param('projectName') projectName: string){
+    return this.apiService.getServices(projectName);
   }
 
-  @Get('/services')
-  async getServices() {
-    return this.apiService.getServices();
+  @Get('/projects/:projectName/endpoints/:id')
+  async getEndpoint(@Param('projectName') projectName: string, @Param('id') id:string){
+    return this.apiService.getEndpoint(projectName, id);
   }
 
-  @Delete('/services/:service')
-  async deleteServices(@Param('service') service) {
-    return this.apiService.deleteServices(service);
+  @Post('/projects/:projectName/endpoints/:id')
+  async updateEndpoint(@Param('projectName') projectName: string, @Param('id') id: string, @Body() data) {
+    return this.apiService.updateEndpoint(projectName, id, data);
+  }
+
+  @Delete('/projects/:projectName/endpoints/:id')
+  async deleteEndpointById(@Param('projectName') projectName: string, @Param('id') id: string){
+    return this.apiService.deleteEndpointById(projectName, id);
+  }
+
+  @Delete('/projects/:projectName/services/:serviceName')
+  async deleteServices(@Param('projectName') projectName: string, @Param('serviceName') serviceName: string){
+    return this.apiService.deleteServices(projectName, serviceName);
   }
 
   @Post('/createspec')
-  async createSpec(@Body('name') name) {
+  async createSpec(@Body('name') name: string) {
     return this.apiService.createSpec(name);
   }
 
@@ -55,7 +58,7 @@ export class ApiController {
   }
 
   @Delete('/specs/:id')
-  async deleteSpecs(@Param('id') id) {
+  async deleteSpecs(@Param('id') id: string) {
     return this.apiService.deleteSpecs(id);
   }
 
@@ -65,10 +68,10 @@ export class ApiController {
     return this.apiService.uploadFile(id, files);
   }
 
-  @Get('/findmocks/:id')
-  async findMocks(@Param('id') id) {
-    return this.apiService.findMocks(id);
-  }
+  // @Get('/findmocks/:id')
+  // async findMocks(@Param('id') id: string) {
+  //   return this.apiService.findMocks(id);
+  // }
 
 
   // portal models
@@ -78,7 +81,7 @@ export class ApiController {
   }
 
   @Delete('/portal/:name')
-  async deletePortal(@Param('name') name) {
+  async deletePortal(@Param('name') name: string) {
     return this.apiService.deletePortal(name);
   }
 
@@ -89,28 +92,30 @@ export class ApiController {
   // }
 
   @Get('simplemodel/:portalName')
-  async getSimpleModel(@Param('portalName') portalName) {
+  async getSimpleModel(@Param('portalName') portalName: string) {
     return this.apiService.getSimpleModel(portalName);
   }
 
   @Post('/syncmodel')
-  async syncPortalModel(@Body('portalName') portalName, @Body('portalUrl') portalUrl, @Body('loginUrl') loginUrl) {
+  async syncPortalModel(@Body('portalName') portalName: string, @Body('portalUrl') portalUrl: string, @Body('loginUrl') loginUrl: string) {
     return this.apiService.syncPortalModel(portalName, portalUrl, loginUrl);
   }
 
   @Post('/updatemodel/:portalName')
-  async updatePortalModel(@Param('portalName') portalName, @Body() body) {
+  async updatePortalModel(@Param('portalName') portalName: string, @Body() body) {
     return this.apiService.updatePortalModel(portalName, body);
   }
 
-  @Get('/exportservices')  
-  async exportServices() {
-    return this.apiService.exportServices();
-  }
+  // @Get('/exportservices')  
+  // async exportServices() {
+  //   return this.apiService.exportServices();
+  // }
 
-  @Post('/importServices')
-  @UseInterceptors(FilesInterceptor('files[]'))
-  async importServices(@UploadedFiles() files) {
-    return this.apiService.importServices(files);
-  }
+  // @Post('/importServices')
+  // @UseInterceptors(FilesInterceptor('files[]'))
+  // async importServices(@UploadedFiles() files) {
+  //   return this.apiService.importServices(files);
+  // }
+  
+
 }
