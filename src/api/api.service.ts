@@ -1,4 +1,4 @@
-import { Injectable, HttpService } from '@nestjs/common';
+import { Injectable, HttpService, HttpException, HttpStatus } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Endpoint } from '../interfaces/endpoints.interfaces';
 import { InjectModel } from '@nestjs/mongoose';
@@ -21,12 +21,12 @@ export class ApiService {
   }
 
   async createProject(projectName) {
-    let project = await this.projectModel.findOneAndUpdate({ name: projectName.toLowerCase() },{ name: projectName.toLowerCase() }, {upsert: true, new: true});
+    let project = await this.projectModel.findOneAndUpdate({ name: projectName.toLowerCase() }, { name: projectName.toLowerCase() }, { upsert: true, new: true });
     return project;
   }
-  
+
   async deleteProject(projectName: string) {
-    let deleted = await this.projectModel.deleteOne({name: projectName});
+    let deleted = await this.projectModel.deleteOne({ name: projectName });
     return deleted;
   }
 
@@ -35,85 +35,87 @@ export class ApiService {
     return projects;
   }
 
-  async getServices(projectName: string){
+  async getServices(projectName: string) {
     const project = await this.projectModel.aggregate([{
-        $match: {
-          name: projectName
-        }
-      }, {
-        $project: {
-          endpoints: 1
-        }
-      }, {
-        $unwind: "$endpoints"
-      },
-      {
-        $group: {
-          _id: "$endpoints.serviceName",
-          serviceName: {
-            $first: '$endpoints.serviceName'
-          },
-          endpoints: {
-            $push: {
-              path: '$endpoints.path',
-              id: "$endpoints.id",
-              statusCode: "$endpoints.statusCode"
-            }
+      $match: {
+        name: projectName
+      }
+    }, {
+      $project: {
+        endpoints: 1
+      }
+    }, {
+      $unwind: "$endpoints"
+    },
+    {
+      $group: {
+        _id: "$endpoints.serviceName",
+        serviceName: {
+          $first: '$endpoints.serviceName'
+        },
+        endpoints: {
+          $push: {
+            path: '$endpoints.path',
+            id: "$endpoints.id",
+            statusCode: "$endpoints.statusCode"
           }
         }
-      },
-      {
-        $sort: {
-          "serviceName": 1
-        }
       }
+    },
+    {
+      $sort: {
+        "serviceName": 1
+      }
+    }
     ]);
     return project;
   }
 
-  // async exportServices() {
-  //   const services = await this.endPointModel.find();
-  //   return services;
-  // }
+  async exportProject(projectName) {
+    const services = await this.projectModel.find({ 'name': projectName });
+    return services;
+  }
 
-  // async getServiceEndpoints(serviceName) {
-  //   const endpoints = await this.endPointModel.find({ 'serviceName': serviceName });
-  //   return endpoints;
-  // }
+  async getServiceEndpoints(serviceName) {
+    const endpoints = await this.endPointModel.find({ 'serviceName': serviceName });
+    return endpoints;
+  }
 
-  // async getEndpoints() {
-  //   console.log('getEndpoints');
-  //   const endpoints = await this.endPointModel.find();
-  //   return endpoints;
-  // }
+  async getEndpoints() {
+    console.log('getEndpoints');
+    const endpoints = await this.endPointModel.find();
+    return endpoints;
+  }
 
   async getEndpoint(projectName, id) {
-    let project = await this.projectModel.find({name: projectName }, { endpoints: { $elemMatch: {id: id }}});
+    let project = await this.projectModel.find({ name: projectName }, { endpoints: { $elemMatch: { id: id } } });
     return project[0].endpoints[0];
   }
 
   async deleteEndpointById(projectName: string, id: string) {
     let deleted = await this.projectModel.updateOne({
       name: projectName
-    }, { $pull: {
-      endpoints: { id: id }
-    }})
+    }, {
+      $pull: {
+        endpoints: { id: id }
+      }
+    })
 
     return deleted;
   }
 
   async updateEndpoint(projectName, id, data) {
- 
+
     let endpoint = await this.projectModel.updateOne({
       name: projectName,
-      endpoints: {$elemMatch: {id: id}}
-    },{
+      endpoints: { $elemMatch: { id: id } }
+    }, {
       $set: {
         "endpoints.$.statusCode": data.statusCode,
         "endpoints.$.delay": data.delay,
         "endpoints.$.response": data.response,
         "endpoints.$.emptyArray": data.emptyArray,
-        "endpoints.$.forward" : data.forward,
+        "endpoints.$.forward": data.forward,
         "endpoints.$.customHeaders": data.customHeaders
       }
     })
@@ -125,9 +127,11 @@ export class ApiService {
   async deleteServices(projectName: string, serviceName: string) {
     let deleted = await this.projectModel.updateOne({
       name: projectName
-    }, { $pull: {
-      endpoints: { serviceName: serviceName }
-    }})
+    }, {
+      $pull: {
+        endpoints: { serviceName: serviceName }
+      }
+    })
 
     return deleted;
   }
@@ -235,8 +239,8 @@ export class ApiService {
       loginUrl: loginUrl,
       pages: cleanModel(jsonData.pages),
       activePage: newActivePage
-    }, {upsert: true, new: true});
-  
+    }, { upsert: true, new: true });
+
     return {
       name: model.name,
       host: model.host,
@@ -251,29 +255,25 @@ export class ApiService {
     return model;
   }
 
-  // async importServices(files) {
-  //   let parsedFile = files.map(file => {
-  //     return {
-  //       name: file.originalname,
-  //       data: JSON.parse(file.buffer)
-  //     }
-  //   })[0];
+  async importProject(projectName, files) {
+    let parsedFile = files.map(file => {
+      return {
+        name: file.originalname,
+        data: JSON.parse(file.buffer)
+      }
+    })[0];
 
-  //   await this.endPointModel.bulkWrite(parsedFile.data.map((obj) => {
-  //     const { path, ...update } = obj;
-  //     return {
-  //       updateOne: {
-  //         filter: { path: path },
-  //         update: {
-  //           $set: update,
-  //         },
-  //         upsert: true,
-  //       },
-  //     };
-  //   }));
+    if (projectName !== parsedFile.data[0].name) {
+      throw new HttpException({ status: HttpStatus.BAD_REQUEST, message: "The project name does not match." }, 400);
+    }
 
-  //   return this.getServices();
-  // }
-  
+    await this.projectModel.updateOne(
+      {
+        name: projectName,
+        $set: { endpoints: parsedFile.data[0].endpoints },
+      }
+    );
 
+    return this.getServices(projectName);
+  }
 }
