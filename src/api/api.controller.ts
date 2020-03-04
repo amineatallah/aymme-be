@@ -106,16 +106,15 @@ export class ApiController {
     return this.apiService.updatePortalModel(portalName, body);
   }
 
-  // @Get('/exportservices')  
-  // async exportServices() {
-  //   return this.apiService.exportServices();
-  // }
+  @Get('/exportproject/:projectName')  
+  async exportProject(@Param('projectName') projectName: string) {
+    return this.apiService.exportProject(projectName);
+  }
 
-  // @Post('/importServices')
-  // @UseInterceptors(FilesInterceptor('files[]'))
-  // async importServices(@UploadedFiles() files) {
-  //   return this.apiService.importServices(files);
-  // }
-  
+  @Post('/importproject/:projectName')
+  @UseInterceptors(FilesInterceptor('files[]'))
+  async importProject(@Param('projectName') projectName: string, @UploadedFiles() files) {
+    return this.apiService.importProject(projectName, files);
+  }
 
 }
