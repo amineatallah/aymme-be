@@ -5,12 +5,13 @@ services:
     container_name: aymme-be
     build:
       context: .
-      target: base
+      target: development
     restart: always
     ports:
       - 3000:3000
     volumes:
       - .:/usr/src/app
+      - /usr/src/app/node_modules
     environment:
       - DB_HOST=mongodb://mongo/
       - DB_NAME=aymme

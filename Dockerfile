@@ -1,9 +1,15 @@
-FROM node:12 as base
+FROM node:alpine as development
 
 WORKDIR /usr/src/app
 
-COPY ./ ./
-RUN npm ci
+COPY package*.json ./
+RUN npm install --only=development
+
+FROM node:alpine as base
+
+WORKDIR /usr/src/app
+COPY . .
+RUN npm install
 RUN npm run build
 
 FROM node:alpine as production
