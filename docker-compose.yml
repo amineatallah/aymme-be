@@ -12,7 +12,7 @@ services:
     volumes:
       - .:/usr/src/app
     environment:
-      - DATABASE_HOST=mongodb://mongo/
+      - DB_HOST=mongodb://mongo/
       - DB_NAME=aymme
     links:
       - mongo

@@ -14,7 +14,7 @@ import { ApiModule } from './api/api.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        uri: configService.get('database.host') + configService.get('database.collection'),
+        uri: configService.get('database.host') + configService.get('database.name'),
         useNewUrlParser: true,
         useUnifiedTopology: true,
         useFindAndModify: false
