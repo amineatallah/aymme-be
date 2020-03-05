@@ -21,7 +21,7 @@ export class ApiService {
   }
 
   async createProject(projectName) {
-    let project = await this.projectModel.findOneAndUpdate({ name: projectName.toLowerCase() }, { name: projectName.toLowerCase() }, { upsert: true, new: true });
+    let project = await this.projectModel.create({ name: projectName.toLowerCase() });
     return project;
   }
 

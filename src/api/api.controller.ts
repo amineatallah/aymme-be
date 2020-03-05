@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Body, UseInterceptors, UploadedFiles, Delete } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, UseInterceptors, UploadedFiles, Delete, HttpException, HttpStatus } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiService } from './api.service';
 
@@ -9,7 +9,9 @@ export class ApiController {
 
   @Post('projects')
   async createProject(@Body() data: {projectName: string}) {
-    return this.apiService.createProject(data.projectName);
+    return this.apiService.createProject(data.projectName).catch(error => {
+      throw new HttpException(error.errmsg || error.errors.name.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    });
   }
 
   @Get('/projects')

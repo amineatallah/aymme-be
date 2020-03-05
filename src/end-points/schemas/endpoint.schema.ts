@@ -13,7 +13,7 @@ export const EndPointSchema = new mongoose.Schema({
 }, { strict: false });
 
 export const ProjectSchema = new mongoose.Schema({
-  name: String,
+  name: { type: String, unique: true, required: true},
   endpoints: {
     type: Array,
     Schema: EndPointSchema
