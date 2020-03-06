@@ -14,14 +14,13 @@ export class EndPointsController {
 
   @Get('*')
   @Post('*')
-  async interceptEndpoints(@Req() req, @Query() query, @Headers() headers, @Session() session, @Param() param, @Res() res) {
+  async interceptEndpoints(@Req() req, @Query() query, @Headers() headers, @Res() res) {
 
     const endpoint = await this.endPointsService.interceptEnpoints(req._parsedUrl.pathname, query);
     // if(endpoint.forward){
     //   return this.endPointsService.forwardRequest();
     // } else {
 
-    // console.log('endpoints.customHeaders', endpoint.customHeaders.values());
       return res
               .set(endpoint.customHeaders)
               .status(endpoint.statusCode)

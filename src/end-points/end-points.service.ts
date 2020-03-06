@@ -1,6 +1,5 @@
 import { Injectable, Inject, HttpService } from '@nestjs/common';
 import { Model } from 'mongoose';
-import { Endpoint } from '../interfaces/endpoints.interfaces';
 import { InjectModel } from '@nestjs/mongoose';
 import { Project } from '../interfaces/project.interface';
 
@@ -11,7 +10,6 @@ let uniqid = require('uniqid');
 export class EndPointsService {
 
   constructor(
-    @InjectModel('Endpoint') private readonly endPointModel: Model<Endpoint>, 
     @InjectModel('Project') private readonly projectModel: Model<Project>, 
     private readonly httpService: HttpService) {
 
@@ -33,6 +31,7 @@ export class EndPointsService {
       delay: 0,
       emptyArray: false,
       customHeaders: {},
+      forward: false,
       response: {
         200: [],
         401: [],

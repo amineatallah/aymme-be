@@ -2,6 +2,7 @@ import { Controller, Get, Param, Post, Body, UseInterceptors, UploadedFiles, Del
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiService } from './api.service';
 import { ApiTags } from '@nestjs/swagger';
+import { CreateProjectDto } from './DTO/create-project-dto';
 
 @ApiTags('Projects')
 @Controller('api/projects')
@@ -10,7 +11,7 @@ export class ApiController {
   constructor(private apiService: ApiService) { }
 
   @Post()
-  async createProject(@Body() data: {projectName: string}) {
+  async createProject(@Body() data: CreateProjectDto) {
     return this.apiService.createProject(data.projectName).catch(error => {
       throw new HttpException(error.errmsg || error.errors.name.message, HttpStatus.INTERNAL_SERVER_ERROR);
     });
@@ -31,6 +32,11 @@ export class ApiController {
     return this.apiService.getServices(projectName);
   }
 
+  @Delete('/:projectName/services/:serviceName')
+  async deleteServices(@Param('projectName') projectName: string, @Param('serviceName') serviceName: string){
+    return this.apiService.deleteServices(projectName, serviceName);
+  }
+
   @Get('/:projectName/endpoints/:id')
   async getEndpoint(@Param('projectName') projectName: string, @Param('id') id:string){
     return this.apiService.getEndpoint(projectName, id);
@@ -44,11 +50,6 @@ export class ApiController {
   @Delete('/:projectName/endpoints/:id')
   async deleteEndpointById(@Param('projectName') projectName: string, @Param('id') id: string){
     return this.apiService.deleteEndpointById(projectName, id);
-  }
-
-  @Delete('/:projectName/services/:serviceName')
-  async deleteServices(@Param('projectName') projectName: string, @Param('serviceName') serviceName: string){
-    return this.apiService.deleteServices(projectName, serviceName);
   }
 
   @Get('/export/:projectName')  
