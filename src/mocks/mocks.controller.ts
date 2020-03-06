@@ -1,7 +1,9 @@
 import { Controller, Post, Body, Get, Delete, Param, UseInterceptors, UploadedFiles } from '@nestjs/common';
 import { MocksService } from './mocks.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiConsumes, ApiBody } from '@nestjs/swagger';
 
+@ApiTags('Specs')
 @Controller('api/specs')
 export class MocksController {
 

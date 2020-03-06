@@ -1,6 +1,8 @@
 import { Controller, Get, Delete, Param, Post, Body } from '@nestjs/common';
 import { PortalsService } from './portals.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Portals')
 @Controller('api/portals')
 export class PortalsController {
   

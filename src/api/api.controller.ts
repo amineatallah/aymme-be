@@ -1,7 +1,9 @@
 import { Controller, Get, Param, Post, Body, UseInterceptors, UploadedFiles, Delete, HttpException, HttpStatus } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiService } from './api.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Projects')
 @Controller('api/projects')
 export class ApiController {
 
@@ -59,39 +61,5 @@ export class ApiController {
   async importProject(@Param('projectName') projectName: string, @UploadedFiles() files) {
     return this.apiService.importProject(projectName, files);
   }
-
-  // portal models
-  // @Get('/getportals')
-  // async getPortals() {
-  //   return this.apiService.getPortals();
-  // }
-
-  // @Delete('/portal/:name')
-  // async deletePortal(@Param('name') name: string) {
-  //   return this.apiService.deletePortal(name);
-  // }
-
-  // // @Get('/getmodel/:portalName')
-  // // async getModel(@Param('portalName') portalName){
-  // //   console.log('portal', portalName)
-  // //   return this.apiService.getModel(portalName);
-  // // }
-
-  // @Get('simplemodel/:portalName')
-  // async getSimpleModel(@Param('portalName') portalName: string) {
-  //   return this.apiService.getSimpleModel(portalName);
-  // }
-
-  // @Post('/syncmodel')
-  // async syncPortalModel(@Body('portalName') portalName: string, @Body('portalUrl') portalUrl: string, @Body('loginUrl') loginUrl: string) {
-  //   return this.apiService.syncPortalModel(portalName, portalUrl, loginUrl);
-  // }
-
-  // @Post('/updatemodel/:portalName')
-  // async updatePortalModel(@Param('portalName') portalName: string, @Body() body) {
-  //   return this.apiService.updatePortalModel(portalName, body);
-  // }
-
-
 
 }
