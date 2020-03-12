@@ -1,7 +1,7 @@
 import { Controller, Get, Req, Query, Headers, Session, Param, Res, Post, Body, HttpService } from '@nestjs/common';
 import { EndPointsService } from './end-points.service';
 
-@Controller('gateway')
+@Controller('intercept')
 export class EndPointsController {
   constructor(private endPointsService: EndPointsService, private readonly httpService: HttpService) {}
 
@@ -27,5 +27,4 @@ export class EndPointsController {
               .send(endpoint.response[endpoint.statusCode]);
     // }
   }
-
 }

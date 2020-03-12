@@ -9,24 +9,20 @@ let uniqid = require('uniqid');
 @Injectable()
 export class EndPointsService {
 
+
   constructor(
     @InjectModel('Project') private readonly projectModel: Model<Project>, 
     private readonly httpService: HttpService) {
-
-  }
-
-  forwardRequest() {
-    // this.httpService.get('https://api.myjson.com/bins/1dxlii').subscribe(val => {
-    //   console.log('val', val);
-    // });
   }
 
   async interceptEnpoints(uri, query) {
-
+    let projectName = query.projectName || 'bb-project';
+    let strippedUri = uri.replace('/intercept/', '/');
+  
     const initialResponse = {
-      path: uri,
+      path: strippedUri,
       id: uniqid(),
-      serviceName: uri.split('/')[4],
+      serviceName: 'default',
       statusCode: '500',
       delay: 0,
       emptyArray: false,
@@ -40,13 +36,13 @@ export class EndPointsService {
       }
     }
 
-    let found = await this.projectModel.findOne({name: uri.split('/')[2], 'endpoints.path': uri });
+    let found = await this.projectModel.findOne({name: projectName, 'endpoints.path': strippedUri });
 
     if (found) {
       let project = await this.projectModel.aggregate([{
           $match: {
-            name: uri.split('/')[2],
-            'endpoints.path': uri
+            name: projectName,
+            'endpoints.path': strippedUri
           }
         },
         {
@@ -56,7 +52,7 @@ export class EndPointsService {
                 input: '$endpoints',
                 as: 'endpoint',
                 cond: {
-                  $eq: ["$$endpoint.path", uri]
+                  $eq: ["$$endpoint.path", strippedUri]
                 }
               }
             }
@@ -81,10 +77,11 @@ export class EndPointsService {
                     serviceName: '$endpoint.serviceName',
                     delay: '$endpoint.delay',
                     statusCode: '$endpoint.statusCode',
+                    customHeaders: '$endpoint.customHeaders',
                     response: {
                       $mergeObjects: ['$endpoint.response', {
                         200: {
-                          $slice: ['$endpoint.response.200', 2]
+                          $slice: ['$endpoint.response.200', parseInt(query.from, 10) || 0, parseInt(query.size, 10) || 0]
                         }
                       }]
                     }
@@ -110,9 +107,15 @@ export class EndPointsService {
 
     } else {
       const endpoint = await this.projectModel.updateOne(
-        {name: uri.split('/')[2]},
-        {$addToSet:{
-          endpoints: initialResponse
+        { name: projectName },
+        {
+          $push: {
+            endpoints: {
+              $each: [initialResponse],
+              $sort: {
+                path: 1
+              }
+            }
         }});
       return initialResponse;
     }   
