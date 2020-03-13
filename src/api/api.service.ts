@@ -93,6 +93,7 @@ export class ApiService {
       $set: {
         "endpoints.$.statusCode": data.statusCode,
         "endpoints.$.delay": data.delay,
+        "endpoints.$.serviceName": data.serviceName,
         "endpoints.$.response": data.response,
         "endpoints.$.emptyArray": data.emptyArray,
         "endpoints.$.forward": data.forward,
