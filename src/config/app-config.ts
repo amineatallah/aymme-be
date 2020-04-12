@@ -3,5 +3,6 @@ export default () => ({
   database: {
     name: process.env.DB_NAME || 'aymme',
     host: process.env.DB_HOST || 'mongodb://127.0.0.1:27017/',
-  }
+  },
+  projectName: process.env.PROJECT_NAME || 'bb-project'
 });

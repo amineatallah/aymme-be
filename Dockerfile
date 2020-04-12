@@ -3,7 +3,7 @@ FROM node:alpine as development
 WORKDIR /usr/src/app
 
 COPY package*.json ./
-RUN npm install --only=development
+RUN npm install
 
 FROM node:alpine as base
 

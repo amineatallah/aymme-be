@@ -15,6 +15,7 @@ services:
     environment:
       - DB_HOST=mongodb://mongo/
       - DB_NAME=aymme
+      - PROJECT_NAME=nbb-test
     links:
       - mongo
     command: npm run start:dev
