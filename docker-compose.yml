@@ -11,7 +11,7 @@ services:
       - 3000:3000
     volumes:
       - .:/usr/src/app
-      - /usr/src/app/node_modules
+      - node-modules:/usr/src/app/node_modules
     environment:
       - DB_HOST=mongodb://mongo/
       - DB_NAME=aymme
@@ -26,7 +26,18 @@ services:
     volumes: 
       - mongodb:/data/db
       - mongo-config:/data/configdb
+  
+  webserver:
+    container_name: reverse-proxy
+    image: nginx:latest
+    links: 
+      - app:aymme-be
+    ports: 
+      - 3003:3003
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
 
 volumes: 
   mongodb:
   mongo-config:
+  node-modules:
