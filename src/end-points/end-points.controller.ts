@@ -1,4 +1,4 @@
-import { Controller, Get, Req, Query, Headers, Session, Param, Res, Post, Body, HttpService } from '@nestjs/common';
+import { Controller, Get, Req, Query, Headers, Session, Param, Res, Post, Body, HttpService, All } from '@nestjs/common';
 import { EndPointsService } from './end-points.service';
 
 @Controller('intercept')
@@ -12,19 +12,13 @@ export class EndPointsController {
     return res.send({});
   }
 
-  @Get('*')
-  @Post('*')
-  async interceptEndpoints(@Req() req, @Query() query, @Headers() headers, @Res() res) {
-
-    const endpoint = await this.endPointsService.interceptEnpoints(req._parsedUrl.pathname, query);
-    // if(endpoint.forward){
-    //   return this.endPointsService.forwardRequest();
-    // } else {
+  @All('*')
+  async interceptEndpoints(@Req() req, @Query() query, @Headers() headers, @Body() body, @Res() res) {
+    const endpoint = await this.endPointsService.interceptEnpoints(req._parsedUrl.pathname, query, body);
 
       return res
               .set(endpoint.customHeaders)
               .status(endpoint.statusCode)
               .send(endpoint.response[endpoint.statusCode]);
-    // }
   }
 }

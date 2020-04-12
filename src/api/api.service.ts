@@ -97,6 +97,7 @@ export class ApiService {
         "endpoints.$.response": data.response,
         "endpoints.$.emptyArray": data.emptyArray,
         "endpoints.$.forward": data.forward,
+        "endpoints.$.match": data.match,
         "endpoints.$.customHeaders": data.customHeaders
       }
     })

@@ -1,4 +1,5 @@
-import { Injectable, Inject, HttpService } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Project } from '../interfaces/project.interface';
@@ -12,17 +13,19 @@ export class EndPointsService {
 
   constructor(
     @InjectModel('Project') private readonly projectModel: Model<Project>, 
-    private readonly httpService: HttpService) {
+    private readonly config: ConfigService) {
   }
 
-  async interceptEnpoints(uri, query) {
-    let projectName = query.projectName || 'bb-project';
+  async interceptEnpoints(uri, query, body) {
+
+    let projectName = query.projectName || this.config.get('projectName');
     let strippedUri = uri.replace('/intercept/', '/');
   
     const initialResponse = {
       path: strippedUri,
       id: uniqid(),
       serviceName: 'default',
+      match: {}, //used to matched body data and return the 666 response.
       statusCode: '500',
       delay: 0,
       emptyArray: false,
@@ -32,7 +35,8 @@ export class EndPointsService {
         200: [],
         401: [],
         404: [],
-        500: { message: "Please update mocks data" }
+        500: { message: "Please update mocks data" },
+        666: { message: "Handle with care"}
       }
     }
 
@@ -74,6 +78,7 @@ export class EndPointsService {
                 then: {
                   response: {
                     path: '$endpoint.path',
+                    match: '$endpoint.match',
                     serviceName: '$endpoint.serviceName',
                     delay: '$endpoint.delay',
                     statusCode: '$endpoint.statusCode',
@@ -81,7 +86,7 @@ export class EndPointsService {
                     response: {
                       $mergeObjects: ['$endpoint.response', {
                         200: {
-                          $slice: ['$endpoint.response.200', parseInt(query.from, 10) || 0, parseInt(query.size, 10) || 0]
+                          $slice: ['$endpoint.response.200', parseInt(query.from, 10) || 0, parseInt(query.size, 10) || 10]
                         }
                       }]
                     }
@@ -100,6 +105,15 @@ export class EndPointsService {
 
       if (data.emptyArray) {
         data.response[200] = [];
+      }
+
+      if(data['match'] && data['match']['name'] in body && data['match']['value'] === body[data['match']['name']]){
+        data['statusCode'] = 200;
+        data.response[200] = data.response[666];
+      }
+     
+      if(data['match'] && data['match']['name'] in body && data['match']['value'] !== body[data['match']['name']]){
+        data['statusCode'] = 401;
       }
 
       if (parseInt(data.delay, 10) > 0) await sleep(data.delay);
