@@ -1,101 +1,66 @@
-import { Controller, Get, Param, Post, Body, UseInterceptors, UploadedFiles, Delete } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, UseInterceptors, UploadedFiles, Delete, HttpException, HttpStatus } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiService } from './api.service';
+import { ApiTags } from '@nestjs/swagger';
+import { CreateProjectDto } from './DTO/create-project-dto';
 
-@Controller('api')
+@ApiTags('Projects')
+@Controller('api/projects')
 export class ApiController {
 
   constructor(private apiService: ApiService) { }
 
-  // endpoints
-  @Get('/endpoints/:id')
-  async getEndpoint(@Param('id') id: string) {
-    return this.apiService.getEndpoint(id);
+  @Post()
+  async createProject(@Body() data: CreateProjectDto) {
+    return this.apiService.createProject(data.projectName).catch(error => {
+      throw new HttpException(error.errmsg || error.errors.name.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    });
   }
 
-  @Post('/endpoints/:id')
-  async updateEndpoint(@Param('id') id, @Body() data) {
-    return this.apiService.updateEndpoint(id, data);
+  @Get()
+  async getProjects() {
+    return this.apiService.getProjects();
   }
 
-  @Delete('/endpoints/:id')
-  async deleteEnpointById(@Param('id') id) {
-    return this.apiService.deleteEndpointById(id);
+  @Delete('/:projectName')
+  async deleteProject(@Param('projectName') projectName: string){
+    return this.apiService.deleteProject(projectName);
   }
 
-  // @Get('/endpoints')
-  // async getEndpoints() {
-  //   return this.apiService.getEndpoints();
-  // }
-
-// services
-  @Get('/services/:service')
-  async getService(@Param('service') service) {
-    return this.apiService.getServiceEndpoints(service);
+  @Get('/:projectName/services')
+  async getProject(@Param('projectName') projectName: string){
+    return this.apiService.getServices(projectName);
   }
 
-  @Get('/services')
-  async getServices() {
-    return this.apiService.getServices();
+  @Delete('/:projectName/services/:serviceName')
+  async deleteServices(@Param('projectName') projectName: string, @Param('serviceName') serviceName: string){
+    return this.apiService.deleteServices(projectName, serviceName);
   }
 
-  @Delete('/services/:service')
-  async deleteServices(@Param('service') service) {
-    return this.apiService.deleteServices(service);
+  @Get('/:projectName/endpoints/:id')
+  async getEndpoint(@Param('projectName') projectName: string, @Param('id') id:string){
+    return this.apiService.getEndpoint(projectName, id);
   }
 
-  @Post('/createspec')
-  async createSpec(@Body('name') name){
-    return this.apiService.createSpec(name);
+  @Post('/:projectName/endpoints/:id')
+  async updateEndpoint(@Param('projectName') projectName: string, @Param('id') id: string, @Body() data) {
+    return this.apiService.updateEndpoint(projectName, id, data);
   }
 
-  @Get('/specs')  
-  async getSpecs(){
-    return this.apiService.getSpecs();
+  @Delete('/:projectName/endpoints/:id')
+  async deleteEndpointById(@Param('projectName') projectName: string, @Param('id') id: string){
+    return this.apiService.deleteEndpointById(projectName, id);
   }
 
-  @Delete('/specs/:id')
-  async deleteSpecs(@Param('id') id) {
-    return this.apiService.deleteSpecs(id);
+  @Get('/export/:projectName')  
+  async exportProject(@Param('projectName') projectName: string) {
+    return this.apiService.exportProject(projectName);
   }
 
-  @Post('/upload/:id')
+  @Post('/import/:projectName')
   @UseInterceptors(FilesInterceptor('files[]'))
-  async uploadFile(@UploadedFiles() files, @Param('id') id){
-    return this.apiService.uploadFile(id, files);
+  async importProject(@Param('projectName') projectName: string, @UploadedFiles() files) {
+    return this.apiService.importProject(projectName, files);
   }
 
-  @Get('/findmocks/:id')
-  async findMocks(@Param('id') id ){
-    return this.apiService.findMocks(id);
-  }
-
-
-  // portal models
-  @Get('/getportals')
-  async getPortals(){
-    console.log('here');
-    return this.apiService.getPortals();
-  }
-  
-  // @Get('/getmodel/:portalName')
-  // async getModel(@Param('portalName') portalName){
-  //   console.log('portal', portalName)
-  //   return this.apiService.getModel(portalName);
-  // }
-
-  @Get('simplemodel/:portalName')
-  async getSimpleModel(@Param('portalName') portalName){
-    return this.apiService.getSimpleModel(portalName);
-  }
-  
-  @Post('/syncmodel')
-  async syncPortalModel(@Body('portalName') portalName, @Body('portalUrl') portalUrl, @Body('loginUrl') loginUrl){
-    return this.apiService.syncPortalModel(portalName, portalUrl, loginUrl);
-  }
-
-  @Post('/updatemodel/:portalName')
-  async updatePortalModel(@Param('portalName') portalName, @Body() body) {
-    return this.apiService.updatePortalModel(portalName, body);
-  }
 }

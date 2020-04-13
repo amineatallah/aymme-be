@@ -1,9 +1,11 @@
-version: '3.1'
+version: '3.7'
 
 services:
   app:
-    container_name: node-app
-    build: ./
+    container_name: aymme-be
+    build:
+      context: .
+      target: development
     restart: always
     ports:
       - 3000:3000
@@ -11,8 +13,9 @@ services:
       - .:/usr/src/app
       - node-modules:/usr/src/app/node_modules
     environment:
-      - DATABASE_HOST='mongodb://mongo/'
-      - COLLECTION_NAME='mocks'
+      - DB_HOST=mongodb://mongo/
+      - DB_NAME=aymme
+      - PROJECT_NAME=nbb-test
     links:
       - mongo
     command: npm run start:dev
@@ -24,6 +27,16 @@ services:
     volumes: 
       - mongodb:/data/db
       - mongo-config:/data/configdb
+  
+  webserver:
+    container_name: reverse-proxy
+    image: nginx:latest
+    links: 
+      - app:aymme-be
+    ports: 
+      - 3003:3003
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
 
 volumes: 
   mongodb:

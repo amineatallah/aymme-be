@@ -1,78 +1,137 @@
-import { Injectable, Inject, HttpService } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Model } from 'mongoose';
-import { Endpoint } from '../interfaces/endpoints.interfaces';
 import { InjectModel } from '@nestjs/mongoose';
+import { Project } from '../interfaces/project.interface';
+
 const sleep = require('sleep-promise');
+let uniqid = require('uniqid');
 
 @Injectable()
 export class EndPointsService {
 
-  constructor(@InjectModel('Endpoint') private readonly endPointModel: Model<Endpoint>, private readonly httpService: HttpService) {
 
+  constructor(
+    @InjectModel('Project') private readonly projectModel: Model<Project>, 
+    private readonly config: ConfigService) {
   }
 
-  forwardRequest() {
-    // this.httpService.get('https://api.myjson.com/bins/1dxlii').subscribe(val => {
-    //   console.log('val', val);
-    // });
-  }
+  async interceptEnpoints(uri, query, body) {
 
-  async interceptEnpoints(uri, query) {
+    let projectName = query.projectName || this.config.get('projectName');
+    let strippedUri = uri.replace('/intercept/', '/');
+  
+    const initialResponse = {
+      path: strippedUri,
+      id: uniqid(),
+      serviceName: 'default',
+      match: {}, //used to matched body data and return the 666 response.
+      statusCode: '500',
+      delay: 0,
+      emptyArray: false,
+      customHeaders: {},
+      forward: false,
+      response: {
+        200: [],
+        401: [],
+        404: [],
+        500: { message: "Please update mocks data" },
+        666: { message: "Handle with care"}
+      }
+    }
 
-
-    let endpoint;
-    let found = await this.endPointModel.findOne({ path: uri });
+    let found = await this.projectModel.findOne({name: projectName, 'endpoints.path': strippedUri });
 
     if (found) {
-      if (found.response[200].data.body.length) {
-
-        endpoint = await this.endPointModel.aggregate(
-          [
-            { $match: { path: uri } },
-            { $unwind: { path: '$response.200.data.body' } },
-            { $limit: parseInt(query.size) || 20 },
-            { $group: { _id: '$_id', 'response': { $push: '$response.200.data.body' } } },
-          ]
-        );
-
-        found.response[200].data.body = endpoint[0].response;
-      }
-
-      if (found.emptyArray) {
-        found.response[200].data.body = [];
-      }
-
-      if (parseInt(found.delay, 10) > 0) await sleep(found.delay);
-      return found;
-
-    } else {
-      const endpoint = this.endPointModel({
-        path: uri,
-        serviceName: uri.split('/')[3],
-        response: {
-          200: {
-            data: {
-              body: []
+      let project = await this.projectModel.aggregate([{
+          $match: {
+            name: projectName,
+            'endpoints.path': strippedUri
+          }
+        },
+        {
+          $project: {
+            endpoints: {
+              $filter: {
+                input: '$endpoints',
+                as: 'endpoint',
+                cond: {
+                  $eq: ["$$endpoint.path", strippedUri]
+                }
+              }
             }
-          },
-          401: {
-            data: {
-              body: []
-            },
-          },
-          404: {
-            data: {
-              body: []
+          }
+        },
+        {
+          $project: {
+            endpoint: {
+              $arrayElemAt: ['$endpoints', 0]
             }
-          },
-          500: {
-            data: {
-              body: {message: "Please update mocks data"}
+          }
+        }, {
+          $project: {
+            endpoint: {
+              $cond: {
+                if: {
+                  $isArray: '$endpoint.response.200'
+                },
+                then: {
+                  response: {
+                    path: '$endpoint.path',
+                    match: '$endpoint.match',
+                    serviceName: '$endpoint.serviceName',
+                    delay: '$endpoint.delay',
+                    statusCode: '$endpoint.statusCode',
+                    customHeaders: '$endpoint.customHeaders',
+                    response: {
+                      $mergeObjects: ['$endpoint.response', {
+                        200: {
+                          $slice: ['$endpoint.response.200', parseInt(query.from, 10) || 0, parseInt(query.size, 10) || 10]
+                        }
+                      }]
+                    }
+                  }
+                },
+                else: {
+                  response: '$endpoint'
+                }
+              }
             }
           }
         }
-      });
-      return await endpoint.save();
-    }
+      ]);
+
+      const data = project[0].endpoint.response;
+
+      if (data.emptyArray) {
+        data.response[200] = [];
+      }
+
+      if(data['match'] && data['match']['name'] in body && data['match']['value'] === body[data['match']['name']]){
+        data['statusCode'] = 200;
+        data.response[200] = data.response[666];
+      }
+     
+      if(data['match'] && data['match']['name'] in body && data['match']['value'] !== body[data['match']['name']]){
+        data['statusCode'] = 401;
+      }
+
+      if (parseInt(data.delay, 10) > 0) await sleep(data.delay);
+      return data
+
+    } else {
+      const endpoint = await this.projectModel.updateOne(
+        { name: projectName },
+        {
+          $push: {
+            endpoints: {
+              $each: [initialResponse],
+              $sort: {
+                path: 1
+              }
+            }
+        }});
+      return initialResponse;
+    }   
   }
 }

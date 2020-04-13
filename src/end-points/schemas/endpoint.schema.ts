@@ -11,3 +11,11 @@ export const EndPointSchema = new mongoose.Schema({
   forward: {type: Boolean, default: false},
   response: mongoose.Schema.Types.Mixed
 }, { strict: false });
+
+export const ProjectSchema = new mongoose.Schema({
+  name: { type: String, unique: true, required: true},
+  endpoints: {
+    type: Array,
+    Schema: EndPointSchema
+  }
+}, { strict: false });
