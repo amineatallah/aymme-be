@@ -7,15 +7,13 @@ services:
       context: .
       target: development
     restart: always
-    ports:
-      - 3000:3000
     volumes:
       - .:/usr/src/app
       - node-modules:/usr/src/app/node_modules
     environment:
       - DB_HOST=mongodb://mongo/
       - DB_NAME=aymme
-      - PROJECT_NAME=nbb-test
+      - PROJECT_NAME=BB-PROJECT
     links:
       - mongo
     command: npm run start:dev
