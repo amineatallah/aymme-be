@@ -52,7 +52,6 @@ export class PortalsService {
   }
 
   async syncPortalModel(portalName, portalUrl, loginUrl) {
-    console.log('syncPortalMOdel');
     const login = await this.httpService.post(loginUrl, { username: 'admin', password: 'admin' }).toPromise();
     const result = await this.httpService.get(portalUrl + '/' + portalName + '.json', { headers: { Cookie: "Authorization=" + login.data.access_token } }).toPromise();
     let data = JSON.stringify(result.data).replace(/preferences/g, 'properties');
