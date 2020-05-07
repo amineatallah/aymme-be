@@ -5,12 +5,12 @@ import { EndPointsService } from './end-points.service';
 export class EndPointsController {
   constructor(private endPointsService: EndPointsService, private readonly httpService: HttpService) {}
 
-  @Post('/api/auth/login')
-  async interceptLogin(@Body() body, @Res() res){
-    const login = await this.httpService.post('http://panda-editorial.backbase.test/gateway/api/auth/login', { username: 'admin', password: 'admin' }).toPromise();
-    res.cookie('Authorization', login.data.access_token, {httpOnly: true});
-    return res.send({});
-  }
+  // @Post('/api/auth/login')
+  // async interceptLogin(@Body() body, @Res() res){
+  //   const login = await this.httpService.post('http://panda-editorial.backbase.test/gateway/api/auth/login', { username: 'admin', password: 'admin' }).toPromise();
+  //   res.cookie('Authorization', login.data.access_token, {httpOnly: true});
+  //   return res.send({});
+  // }
 
   @All('*')
   async interceptEndpoints(@Req() req, @Query() query, @Headers() headers, @Body() body, @Res() res) {

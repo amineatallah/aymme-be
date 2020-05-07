@@ -18,7 +18,7 @@ export class EndPointsService {
 
   async interceptEnpoints(uri, query, body) {
 
-    let projectName = query.projectName || this.config.get('projectName');
+    let projectName = (query.projectName || this.config.get('projectName')).toLowerCase();
     let strippedUri = uri.replace('/intercept/', '/');
   
     const initialResponse = {
