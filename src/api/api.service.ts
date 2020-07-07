@@ -2,13 +2,55 @@ import { Injectable, HttpService, HttpException, HttpStatus } from '@nestjs/comm
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Project } from '../interfaces/project.interface';
+import { AuthService } from 'src/helpers/authService';
 
 @Injectable()
 export class ApiService {
   constructor(
     @InjectModel('Project') private readonly projectModel: Model<Project>,
-  ) {
+    private readonly authService: AuthService,
+    private readonly httpService: HttpService
+  ) {}
 
+  async syncEndpointWithRemote(projectName, path) {
+    const project = await this.projectModel.findOne({name: projectName});
+
+    const config = {
+      username: project.config.username,
+      password: project.config.password,
+      url : project.config.identityLoginUrl,
+      projectName: projectName
+    }
+
+    const Token = this.authService.getToken(project.name) || await this.authService.identityLogin(config).catch(error => {
+      throw new HttpException(error.response.data.error_description || error.response.data.error, HttpStatus.INTERNAL_SERVER_ERROR);
+    });
+
+    const data = await this.syncEndpointData(project, path).catch(error => {
+      this.authService.resetToken(project.name);
+      console.log('error', error);
+      if(error.response.status === 404) {
+        throw new HttpException(error.response.statusText || '' , HttpStatus.NOT_FOUND);
+      } else {
+
+        throw new HttpException(error.response.statusText || 'Something went wrong' , HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    });
+    return data;
+  }
+
+  async syncEndpointData(project, path) {
+    let regex = new RegExp(project.config.regex);
+    let uri = path.replace(regex, '');
+    console.log('uri*********', uri);
+    const result = await this.httpService.get(`${project.config.host}${uri}`, { headers: { Cookie: "Authorization=" + this.authService.getToken(project.name) } }).toPromise();
+    return result.data;
+  }
+
+  async updateProjectConfig(projectName, body) {
+    return await this.projectModel.updateOne({
+      name: projectName.toLowerCase()
+    },{ config: body})
   }
 
   async createProject(projectName) {
@@ -37,8 +79,7 @@ export class ApiService {
       }
     }, {
       $unwind: "$endpoints"
-    },
-    {
+    }, {
       $group: {
         _id: "$endpoints.serviceName",
         serviceName: {
@@ -52,14 +93,25 @@ export class ApiService {
           }
         }
       }
-    },
-    {
+    }, {
       $sort: {
         "serviceName": 1
       }
     }
     ]);
-    return project;
+
+    const config = await this.projectModel.aggregate([{
+      $match: {
+        name: projectName
+      }
+      },{
+        $project: {
+          config: 1,
+        }
+      }
+    ])
+
+    return {...config[0], services: project};
   }
 
   async exportProject(projectName) {

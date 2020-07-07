@@ -14,6 +14,10 @@ RUN npm run build
 
 FROM node:alpine as production
 
+ENV DB_HOST=mongodb://mongo/
+ENV DB_NAME=aymme
+ENV PROJECT_NAME=BB-PROJECT
+
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm ci --production
