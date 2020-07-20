@@ -7,6 +7,7 @@ export const EndPointSchema = new mongoose.Schema({
   delay: {type:Number, default: 0},
   emptyArray: Boolean,
   serviceName: String,
+  method: String,
   customHeaders: mongoose.Schema.Types.Mixed,
   forward: {type: Boolean, default: false},
   match: {},

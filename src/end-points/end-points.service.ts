@@ -7,6 +7,8 @@ import { Project } from '../interfaces/project.interface';
 const sleep = require('sleep-promise');
 let uniqid = require('uniqid');
 
+var _ = require('lodash');
+
 @Injectable()
 export class EndPointsService {
 
@@ -15,7 +17,7 @@ export class EndPointsService {
     private readonly config: ConfigService) {
   }
 
-  async interceptEnpoints(uri, query, body) {
+  async interceptEnpoints(uri, query, body, req) {
     let queryParams = '';
 
     let projectName = (query.projectName || this.config.get('projectName')).toLowerCase();
@@ -57,16 +59,16 @@ export class EndPointsService {
       }
 
       if (parseInt(data.delay, 10) > 0) await sleep(data.delay);
-      return data
+      return data;
 
     } else {
 
-      return await this.createEndpoint(project, strippedUri);
+      return await this.createEndpoint(project, strippedUri, req);
 
     }   
   }
 
-  async createEndpoint(project, strippedUri) {
+  async createEndpoint(project, strippedUri, req) {
     let initialResponse = {
       path: strippedUri,
       id: uniqid(),
@@ -74,6 +76,7 @@ export class EndPointsService {
       match: {}, //used to matche body data and return the 666 response.
       statusCode: '500',
       delay: 0,
+      method: req.method,
       emptyArray: false,
       customHeaders: {},
       forward: false,
@@ -149,13 +152,7 @@ export class EndPointsService {
                   statusCode: '$endpoint.statusCode',
                   customHeaders: '$endpoint.customHeaders',
                   emptyArray: '$endpoint.emptyArray',
-                  response: {
-                    $mergeObjects: ['$endpoint.response', {
-                      200: {
-                        $slice: ['$endpoint.response.200', query.from * 10 || 0, parseInt(query.size, 10) || 10]
-                      }
-                    }]
-                  }
+                  response: '$endpoint.response'
                 }
               },
               else: {
@@ -166,6 +163,15 @@ export class EndPointsService {
         }
       }
     ]);
+
+    let data  = project[0].endpoint.response.response[200];
+    if(data.length > 0) {
+      let sortedData =  _.orderBy(data,  [query.orderBy], [query.direction]);
+      let from = (parseInt(query.from, 10) || 0) * (parseInt(query.size, 10) || 10);
+      let size = parseInt(query.size || 10) + from;
+      let paginatedData = _.slice(sortedData, [from], [size]);
+      project[0].endpoint.response.response[200] = paginatedData;
+    }
 
     return project;
   }

@@ -89,7 +89,8 @@ export class ApiService {
           $push: {
             path: '$endpoints.path',
             id: "$endpoints.id",
-            statusCode: "$endpoints.statusCode"
+            statusCode: "$endpoints.statusCode",
+            method: "$endpoints.method"
           }
         }
       }

@@ -26,7 +26,7 @@ export class EndPointsController {
 
   @All('*')
   async interceptEndpoints(@Req() req, @Query() query, @Headers() headers, @Body() body, @Res() res) {
-    const endpoint = await this.endPointsService.interceptEnpoints(req._parsedUrl.pathname, query, body);
+    const endpoint = await this.endPointsService.interceptEnpoints(req._parsedUrl.pathname, query, body, req);
       return res
               .set(endpoint.customHeaders)
               .status(endpoint.statusCode)

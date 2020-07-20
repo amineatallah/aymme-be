@@ -11,7 +11,6 @@ export class AuthService  {
   }
 
   getToken(projectName) {
-    console.log('gettoken', this.tokens[projectName]);
     return this.tokens[projectName];
   }
 
