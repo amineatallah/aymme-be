@@ -111,6 +111,7 @@ export class PortalsService {
       host: model.host,
       loginUrl: model.loginUrl,
       modelUrl: model.modelUrl,
+      identityLoginUrl: model.identityLoginUrl,
       useIdentity: model.useIdentity,
       pages: model.pages,
       activePage: model.activePage
