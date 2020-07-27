@@ -16,8 +16,10 @@ export class AuthService  {
 
   async basicLogin({url, username, password}) {
 
-    const login = await this.httpService.post(url, querystring.stringify({ username, password}), 
-    {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).toPromise(); 
+    // const login = await this.httpService.post(url, querystring.stringify({ username, password}), 
+    // {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).toPromise(); 
+     const login = await this.httpService.post(url, { username, password}).toPromise(); 
+
     return login.data.access_token;
   }
 
