@@ -36,6 +36,14 @@ export const ProjectSchema = new mongoose.Schema({
       type: String,
       default: 'api/auth/login'
     },
+    client_id: {
+      type: String,
+      default: 'bb-tooling-client',
+    },
+    grant_type: {
+      type: String,
+      default: 'password'
+    },
     whitelist_params: {
       type: Array,
       default: ['periodEndDate', 

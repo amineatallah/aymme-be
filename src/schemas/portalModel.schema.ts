@@ -10,6 +10,14 @@ export const PortalModelSchema = new mongoose.Schema({
   loginUrl: String,
   modelUrl: String,
   identityLoginUrl: String,
+  client_id: {
+    type: String,
+    default: 'bb-tooling-client',
+  },
+  grant_type: {
+    type: String,
+    default: 'password'
+  },
   useIdentity: {
     type: Boolean,
     default: false,

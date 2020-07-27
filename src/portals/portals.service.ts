@@ -43,17 +43,6 @@ export class PortalsService {
     return deleted;
   }
 
-  // async getModel(portalName) {
-  //   let portalModel = await this.portalModel.findOne({ name: portalName });
-  //   return {
-  //     name: portalModel.name,
-  //     host: portalModel.host,
-  //     activePage: portalModel.activePage,
-  //     loginUrl: portalModel.loginUrl,
-  //     pages: JSON.parse(portalModel.pages)
-  //   };
-  // }
-
   async getSimpleModel(portalName) {
     let portalModel = await this.portalModel.findOne({ name: portalName });
     let pages = portalModel.pages;
@@ -62,11 +51,12 @@ export class PortalsService {
   }
 
   async syncPortalModel(body) {
-
     const config = {
       username: body.username,
       password: body.password,
       url: body.useIdentity ? body.identityLoginUrl : `${body.host}${body.loginUrl}`,
+      grant_type: body.grant_type,
+      client_id: body.client_id
     }
 
     const token = body.useIdentity ? await this.authService.identityLogin(config) : await this.authService.basicLogin(config)
@@ -101,7 +91,9 @@ export class PortalsService {
       identityLoginUrl: body.identityLoginUrl,
       pages: cleanModel(jsonData.pages),
       useIdentity: body.useIdentity,
-      activePage: newActivePage
+      activePage: newActivePage,
+      grant_type: body.grant_type,
+      client_id: body.client_id
     }, { upsert: true, new: true });
 
     return {
@@ -114,7 +106,9 @@ export class PortalsService {
       identityLoginUrl: model.identityLoginUrl,
       useIdentity: model.useIdentity,
       pages: model.pages,
-      activePage: model.activePage
+      activePage: model.activePage,
+      client_id: model.client_id,
+      grant_type: model.grant_type
     }
   }
 

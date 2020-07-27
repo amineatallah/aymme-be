@@ -21,17 +21,15 @@ export class AuthService  {
     return login.data.access_token;
   }
 
-  async identityLogin({username, password, url, projectName = null}) {
+  async identityLogin({username, password, url, grant_type, client_id, projectName = null}) {
     if(this.tokens[projectName]) return;
-    console.log("projectname identitylogin", projectName, url);
     
-    const login = await this.httpService.post(url, querystring.stringify({ username, password, grant_type: 'password', client_id: 'bb-tooling-client'}), 
+    const login = await this.httpService.post(url, querystring.stringify({ username, password, grant_type, client_id}), 
       {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).toPromise();
     
     if(projectName) {
       this.tokens[projectName] = login.data.access_token;
     }
-    console.log('login.data', login.data);
     return login.data.access_token; 
   }
 }

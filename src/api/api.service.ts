@@ -14,11 +14,12 @@ export class ApiService {
 
   async syncEndpointWithRemote(projectName, path) {
     const project = await this.projectModel.findOne({name: projectName});
-
     const config = {
       username: project.config.username,
       password: project.config.password,
       url : project.config.identityLoginUrl,
+      grant_type: project.config.grant_type,
+      client_id: project.config.client_id,
       projectName: projectName
     }
 
@@ -42,7 +43,6 @@ export class ApiService {
   async syncEndpointData(project, path) {
     let regex = new RegExp(project.config.regex);
     let uri = path.replace(regex, '');
-    console.log('uri*********', uri);
     const result = await this.httpService.get(`${project.config.host}${uri}`, { headers: { Cookie: "Authorization=" + this.authService.getToken(project.name) } }).toPromise();
     return result.data;
   }
