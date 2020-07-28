@@ -1,4 +1,4 @@
-import { Controller, Get, Delete, Param, Post, Body } from '@nestjs/common';
+import { Controller, Get, Delete, Param, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { PortalsService } from './portals.service';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -29,9 +29,11 @@ export class PortalsController {
   }
 
   @Post('/syncmodel')
-  async syncPortalModel(@Body('portalName') portalName: string, @Body('portalUrl') portalUrl: string, @Body('loginUrl') loginUrl: string) {
-    console.log('here');
-    return this.portalsService.syncPortalModel(portalName, portalUrl, loginUrl);
+  async syncPortalModel(@Body() body) {
+    return this.portalsService.syncPortalModel(body).catch(error => {
+      console.log('errorrr', error);
+      throw new HttpException(error.response.data.error_description || error.response.data, HttpStatus.INTERNAL_SERVER_ERROR);
+    });;
   }
 
   @Post('/updatemodel/:portalName')

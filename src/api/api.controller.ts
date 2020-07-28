@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Body, UseInterceptors, UploadedFiles, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, UseInterceptors, UploadedFiles, Delete, HttpException, HttpStatus, Query, Res } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiService } from './api.service';
 import { ApiTags } from '@nestjs/swagger';
@@ -17,9 +17,27 @@ export class ApiController {
     });
   }
 
+  @Post('/:projectName/updateProjectConfig')
+  async updateProjectConfig(@Param('projectName') projectName, @Body() body) {
+    console.log('projectName', projectName, body);
+    return this.apiService.updateProjectConfig(projectName, body);
+  }
+
   @Get()
   async getProjects() {
     return this.apiService.getProjects();
+  }
+
+  @Get('/:projectName/syncEndpoint')
+  async syncEndpointWithRemote(@Param('projectName') projectName, @Query() query) {
+    return this.apiService.syncEndpointWithRemote(projectName, query.path).catch(error => {
+      console.log('error', error);
+      if(error.response.status === 404){
+        throw new HttpException('Endpoint Not Found on Remote server', HttpStatus.NOT_FOUND);
+      } else {
+        throw new HttpException(error.message || error.errmsg || error.errors.name.messagek, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    });
   }
 
   @Delete('/:projectName')

@@ -3,6 +3,7 @@ import { PortalsService } from './portals.service';
 import { PortalsController } from './portals.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PortalModelSchema } from '../schemas/portalModel.schema';
+import { AuthService } from 'src/helpers/authService';
 
 @Module({
   imports: [
@@ -11,7 +12,7 @@ import { PortalModelSchema } from '../schemas/portalModel.schema';
       { name: 'PortalModel', schema: PortalModelSchema},
     ])    
   ],
-  providers: [PortalsService],
+  providers: [PortalsService, AuthService],
   controllers: [PortalsController]
 })
 export class PortalsModule {}

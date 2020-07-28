@@ -6,6 +6,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ProjectSchema } from './schemas/endpoint.schema';
 import { ForwardController } from './forward.controller';
 import { ConfigModule } from '@nestjs/config';
+import { AuthService } from 'src/helpers/authService';
+import { LoginEndPointsService } from './login-endpoints.service';
 
 @Module({
   imports: [
@@ -16,6 +18,11 @@ import { ConfigModule } from '@nestjs/config';
     ])
   ],
   controllers: [EndPointsController, ForwardController],
-  providers: [EndPointsService]
+  providers: [
+    EndPointsService, 
+    AuthService,
+    LoginEndPointsService
+  ]
+
 })
 export class EndPointsModule {}
