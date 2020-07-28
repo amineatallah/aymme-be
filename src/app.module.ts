@@ -7,7 +7,6 @@ import { ApiModule } from './api/api.module';
 import { MocksModule } from './mocks/mocks.module';
 import { PortalsModule } from './portals/portals.module';
 
-// 'mongodb+srv://bbMockServer:nottesting@mocks-w55vb.mongodb.net/mocks', { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }
 @Module({
   imports: [
     ConfigModule.forRoot({
