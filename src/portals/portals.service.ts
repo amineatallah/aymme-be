@@ -32,7 +32,9 @@ export class PortalsService {
         identityLoginUrl: portal.identityLoginUrl,
         loginUrl: portal.loginUrl,
         activePage: portal.activePage,
-        pages: portal.pages
+        pages: portal.pages,
+        grant_type: portal.grant_type,
+        client_id: portal.client_id
       }
     })
     return portals;
