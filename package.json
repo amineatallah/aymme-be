@@ -31,7 +31,7 @@
     "class-validator": "^0.12.2",
     "lodash": "^4.17.19",
     "mongoose": "^5.9.22",
-    "postcss": "^7.0.32",
+    "postcss": "^8.2.10",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^6.6.0",
